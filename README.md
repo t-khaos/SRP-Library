@@ -1,6 +1,8 @@
 # TRP
 
-A custom render pipeline based on Unity SRP, which is used for personal learning and practical rendering algorithm projects.
+TSR is a custom render pipeline based on Unity SRP, which is utilized for personal learning and implementing rendering algorithm.
+
+- Unity 2023.1.0a21 Alpha
 
 # Gallery
 
@@ -23,3 +25,8 @@ A custom render pipeline based on Unity SRP, which is used for personal learning
 ![PBR-IBL](./Gallery/PBR-IBL.png)
 
 # Reference
+
+1. [AKGWSB/ToyRenderPipeline: Custom deferred render pipeline with Unity SRP（Scriptable Render Pipeline） (github.com)](https://github.com/AKGWSB/ToyRenderPipeline)
+2. [MaxwellGengYF/Unity-MPipeline-Framework: A convenient programming framework for Scriptable Rendering Pipeline (github.com)](https://github.com/MaxwellGengYF/Unity-MPipeline-Framework)
+3. [wlgys8/SRPLearn: Unity可编程渲染管线造轮子项目 (github.com)](https://github.com/wlgys8/SRPLearn)
+
