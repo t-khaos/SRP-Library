@@ -48,7 +48,7 @@
             samplerCUBE _SpecularIBL;
             sampler2D _BRDFLUT;
             
-            sampler2D _ShadowMap;
+            sampler2D _ShadowStrengthTex;
 
             half4x4 _vpMatrix;
             half4x4 _vpMatrixInv;
@@ -88,7 +88,9 @@
                     _DiffuseIBL, _SpecularIBL, _BRDFLUT
                 );
 
-                half3 color = Direct + Indirect;
+                half visibility = tex2D(_ShadowStrengthTex, uv).r;
+
+                half3 color = Direct* visibility + Indirect*AO + Emission;
 
                 //Reinhard 只压缩高亮度
                 //color = color / (color + 1.0);

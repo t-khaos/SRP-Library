@@ -1,13 +1,13 @@
 Shader "TRP/ShaderMapping"
 {
-    Properties
-    {
-
-    }
+    Properties {}
     SubShader
     {
         Cull off ZWrite off ZTest Always
-        Tags { "LightMode"="ShaderMapping"}
+        Tags
+        {
+            "LightMode"="ShaderMapping"
+        }
         Pass
         {
             CGPROGRAM
@@ -26,7 +26,6 @@ Shader "TRP/ShaderMapping"
             sampler2D _gdepth, _GT1;
             sampler2D _ShadowMap;
 
-            
 
             struct appdata
             {
@@ -40,7 +39,7 @@ Shader "TRP/ShaderMapping"
                 float4 vertex : SV_POSITION;
             };
 
-            v2f vert (appdata v)
+            v2f vert(appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
@@ -48,25 +47,25 @@ Shader "TRP/ShaderMapping"
                 return o;
             }
 
-            float frag (v2f i) : SV_Target
+            fixed4 frag(v2f i) : SV_Target
             {
-                float2 uv = i.uv;
-
+                float2 uv = i.uv; 
+                float3 normal = tex2D(_GT1, uv).rgb * 2 - 1;
                 float d = UNITY_SAMPLE_DEPTH(tex2D(_gdepth, uv));
-                float linearDepth = Linear01Depth(d);
+                //float d_lin = Linear01Depth(d);
 
+                // 反投影重建世界坐标
                 float4 ndcPos = float4(uv*2-1, d, 1);
                 float4 worldPos = mul(_vpMatrixInv, ndcPos);
-                worldPos/=worldPos.w;
+                worldPos /= worldPos.w;
 
-                float4 ndcShadowPos =  mul(_vpMatrixShadow, worldPos);
-                ndcShadowPos /= ndcShadowPos.w;
-                float3 ShadowCoord = ndcShadowPos.xyz;
-                ShadowCoord.xy = ShadowCoord.xy *0.5+0.5;
-
-                float visibility = ShadowMap01(_ShadowMap, ShadowCoord);
-
-                return visibility;
+                float3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
+                float bias = max(0.001 * (1.0 - dot(normal, lightDir)), 0.001);
+                if(dot(lightDir, normal) < 0.005) return 0;
+                float shadow = 1.0;
+                worldPos.xyz += normal * 0.03;
+                shadow *= ShadowMap01(worldPos, _ShadowMap, _vpMatrixShadow);
+                return shadow;
             }
             ENDCG
         }

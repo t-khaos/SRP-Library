@@ -33,7 +33,7 @@
             
             struct v2f
             {
-                float4 vertex : SV_POSITION;
+                half4 vertex : SV_POSITION;
                 float2 depth : TEXCOORD0;
             };
 
@@ -48,13 +48,10 @@
             fixed4 frag(v2f i) : SV_Target
             {
                 //从顶点着色器传过来的左边是屏幕空间坐标而不是期望的裁剪空间坐标
-                half depth = i.depth.x/i.depth.y;
-    
-                #if defined (UNITY_REVERSED_Z)
-                    depth = 1.0 - depth;//Reverse-Z
-                #endif
-                fixed4 color = Encodehalf2RGBA(depth);
-                //fixed4 color = float4(depth,depth,depth,1);
+                float depth = i.depth.x/i.depth.y;
+                
+                //fixed4 color = EncodeFloat2RGBA(depth);
+                fixed4 color = float4(depth,depth,depth,1);
                 return color;
             }
 

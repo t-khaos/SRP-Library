@@ -33,6 +33,7 @@ public class DeferredRenderPipeline : RenderPipeline
 
 
         shadowTex = new RenderTexture(shadowMapSize, shadowMapSize, 24, RenderTextureFormat.Depth, RenderTextureReadWrite.Linear);
+        shadowStrengthTex = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
         
         shadowMapping = new ShadowMapping();
     }
@@ -63,12 +64,13 @@ public class DeferredRenderPipeline : RenderPipeline
         
         
         Shader.SetGlobalTexture("_ShadowMap", shadowTex);
+        Shader.SetGlobalTexture("_ShadowStrengthTex",shadowStrengthTex);
 
-        
         ShadowCastingPass(context, camera);
 
         GBufferPass(context, camera);
         
+        ShadowMappingPass(context, camera);
         
         LightPass(context, camera);
 
@@ -95,10 +97,16 @@ public class DeferredRenderPipeline : RenderPipeline
         shadowMapping.SaveRenderingCameraSettings(ref camera);
         shadowMapping.ConfigShadowCamera(ref camera, lightDir);
         
-        context.SetupCameraProperties(camera);
+        //光源裁剪空间投影矩阵
+        Matrix4x4 V = camera.worldToCameraMatrix;
+        Matrix4x4 P = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false);
+        Shader.SetGlobalMatrix("_vpMatrixShadow", P*V);
+        
         
         CommandBuffer cmd = new CommandBuffer();
         cmd.name = "ShadowCasting";
+        
+        context.SetupCameraProperties(camera);
         cmd.SetRenderTarget(shadowTex);
         cmd.ClearRenderTarget(true,true,Color.clear);
         context.ExecuteCommandBuffer(cmd);
@@ -151,18 +159,12 @@ public class DeferredRenderPipeline : RenderPipeline
     
     void ShadowMappingPass(ScriptableRenderContext context, Camera camera)
     {
-        //光源裁剪空间投影矩阵
-        Matrix4x4 V = camera.worldToCameraMatrix;
-        Matrix4x4 P = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false);
-        Shader.SetGlobalMatrix("_vpMatrixShadow", P*V);
-        
         CommandBuffer cmd = new CommandBuffer();
         cmd.name = "ShadowMapping";
         
         Material mat = new Material(Shader.Find("TRP/ShaderMapping"));
         cmd.Blit(gbufferID[0], shadowStrengthTex, mat);
         context.ExecuteCommandBuffer(cmd);
-        
         context.Submit();
     }
     

@@ -54,28 +54,33 @@ half3 ACESFilm(half3 x)
     return saturate((x * (a * x + b)) / (x * (c * x + d) + e));
 }
 
-half DecodeRGBA2half(half4 rgba) {
-    const half4 bitShift = half4(1.0, 1.0/256.0, 1.0/(256.0*256.0), 1.0/(256.0*256.0*256.0));
+float DecodeRGBA2hFloat(float4 rgba) {
+    const float4 bitShift = float4(1.0, 1.0/256.0, 1.0/(256.0*256.0), 1.0/(256.0*256.0*256.0));
     return dot(rgba, bitShift);
 }
 
-half4 Encodehalf2RGBA(half depth) {
-    const float bitShift = half4(1.0, 256.0, 256.0 * 256.0, 256.0 * 256.0 * 256.0);
-    const half4 bitMask = half4(1.0/256.0, 1.0/256.0, 1.0/256.0, 0.0);
-    half4 rgbaDepth = frac(depth * bitShift);
+float4 EncodeFloat2RGBA(float depth) {
+    const float bitShift = float4(1.0, 256.0, 256.0 * 256.0, 256.0 * 256.0 * 256.0);
+    const float4 bitMask = float4(1.0/256.0, 1.0/256.0, 1.0/256.0, 0.0);
+    float4 rgbaDepth = frac(depth * bitShift);
     rgbaDepth -= rgbaDepth.gbaa * bitMask;
     return rgbaDepth;
 }
 
-half ShadowMap01(sampler2D _ShadowMap, half3 ShadowCoord)
+float ShadowMap01(float4 worldPos, sampler2D _shadowtex, float4x4 _shadowVpMatrix)
 {
-    half d_frag = ShadowCoord.z;
-    half d_shadow = DecodeRGBA2half(tex2D(_ShadowMap, ShadowCoord.xy));
-#if defined (UNITY_REVERSED_Z)
-    if(d_shadow>d_frag) return 0.0f;
-#else
-    if(d_shadow<d_frag) return 0.0f;
-#endif
+    float4 shadowNdc = mul(_shadowVpMatrix, worldPos);
+    shadowNdc /= shadowNdc.w;
+    float2 uv = shadowNdc.xy * 0.5 + 0.5;
 
-    return 1.0;
+    float d = shadowNdc.z;
+    float d_sample = tex2D(_shadowtex, uv).r;
+
+    #if defined (UNITY_REVERSED_Z)
+    if(d_sample>d) return 0.0f;
+    #else
+    if(d_sample<d) return 0.0f;
+    #endif
+
+    return 1.0f;
 }
