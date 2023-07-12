@@ -16,7 +16,7 @@
 
             #include "UnityCG.cginc"
             #include "BRDF.cginc"
-            #include "Math.cginc"
+            #include "Common.cginc"
 
             struct appdata
             {

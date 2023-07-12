@@ -2,41 +2,78 @@
 {
     Properties
     {
-        [Toggle] _UseBaseColorTex("Use Albedo Tex", Float) = 1
         _BaseColor("BaseColor", color) = (1,1,1,1)
         _BaseColorTex("BaseColorTex", 2D) = "white" {}
 
-        [Toggle] _UseMetallicTex("Use Metallic Tex", Float) = 1
         _Metallic("Metallic", Range(0, 1)) = 0.5
         _MetallicTex("MetallicTex", 2D) = "white" {}
 
-        [Toggle] _UseRoughnessTex("Use Roughness Tex", Float) = 1
         _Roughness("Roughness", Range(0, 1)) = 0.5
         _RoughnessTex("RoughnessTex", 2D) = "white" {}
 
         [Toggle] _UseNormalTex("Use Normal Tex", Float) = 1
         _NormalTex("NormalTex", 2D) = "bump" {}
 
-        [Toggle] _UseAOTex("Use AO Tex", Float) = 1
         _AOTex("AOTex", 2D) = "white" {}
 
-        [Toggle] _UseEmissionTex("Use Emission Tex", Float) = 1
-        _Emission("Emission", color) = (1,1,1,1)
+        _Emission("Emission", color) = (0,0,0,0)
         _EmissionTex("EmissionTex", 2D) = "black" {}
     }
     SubShader
     {
-        Tags { "LightMode"="GBuffer" }
-        LOD 100
-
         Pass
         {
+            Tags { "LightMode"="ShadowCasting"}
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
 
             #include "UnityCG.cginc"
-            #include "Math.cginc"
+            #include "Common.cginc"
+
+            struct appdata{
+                half4 vertex : POSITION;
+            };
+
+            struct v2f{
+                half2 clipPos : CLIP_POSITION_ZW;
+            };
+
+            v2f vert(appdata v)
+            {
+                v2f o;
+                half4 clipPos = UnityObjectToClipPos(v.vertex);
+                o.clipPos = clipPos.zw;
+                return o;
+            }
+
+            half4 frag(v2f i) : SV_TARGET
+            {
+                //从顶点着色器传过来的左边是屏幕空间坐标而不是期望的裁剪空间坐标
+                half depth = i.clipPos.x/i.clipPos.y;
+    
+                #if defined (UNITY_REVERSED_Z)
+                    depth = 1.0 - depth;//Reverse-Z
+                #endif
+
+                half4 color = Encodehalf2RGBA(depth);
+                return color;
+            }
+
+
+            ENDCG
+        }
+        
+        Pass
+        {
+            Tags { "LightMode"="GBuffer" }
+
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+
+            #include "UnityCG.cginc"
+            #include "Common.cginc"
 
             struct appdata
             {
@@ -106,11 +143,11 @@
                 half Roughness = tex2D(_RoughnessTex, uv).r;
                 half AO = tex2D(_AOTex, uv).r;
 
-                if (!_UseBaseColorTex) BaseColor = _BaseColor;
-                if (!_UseMetallicTex) Metallic = _Metallic;
-                if (!_UseRoughnessTex) Roughness = _Roughness;
+                BaseColor *= _BaseColor;
+                Metallic *= _Metallic;
+                Roughness *= _Roughness;
                 if (!_UseAOTex) AO = 1;
-                if (!_UseEmissionTex) Emission = _Emission;
+                Emission *= _Emission;
 
                 //编码GBuffer
                 o.GT0 = half4(BaseColor, Metallic);

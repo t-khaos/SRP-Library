@@ -15,11 +15,7 @@ Material:
   m_InvalidKeywords:
   - _ENABLEMETALLICTEX_ON
   - _ENABLEROUGHNESSTEX_ON
-  - _USEAOTEX_ON
-  - _USEBASECOLORTEX_ON
-  - _USEMETALLICTEX_ON
   - _USENORMALTEX_ON
-  - _USEROUGHNESSTEX_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -101,21 +97,21 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Metallic: 0.65
+    - _Metallic: 1
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _Roughness: 0.5
+    - _Roughness: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
-    - _UseAOTex: 1
-    - _UseBaseColorTex: 1
+    - _UseAOTex: 0
+    - _UseBaseColorTex: 0
     - _UseEmissionTex: 0
-    - _UseMetallicTex: 1
+    - _UseMetallicTex: 0
     - _UseNormalTex: 1
-    - _UseRoughnessTex: 1
+    - _UseRoughnessTex: 0
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}

@@ -10,6 +10,13 @@ public class DeferredRenderPipeline : RenderPipeline
     public Cubemap DiffuseIBL;
     public Cubemap SpecularIBL;
     public Texture BRDFLUT;
+    
+    //阴影相关
+    private RenderTexture shadowTex;
+    private int shadowMapSize = 1024;
+    private ShadowMapping _shadowMapping = new ShadowMapping();
+    public ShadowMapSettings ShadowMapSettings;
+    public float _orthoDistance = 500;
 
     public DeferredRenderPipeline()
     {
@@ -21,6 +28,9 @@ public class DeferredRenderPipeline : RenderPipeline
 
         for (int i = 0; i < 4; i++)
             gbufferID[i] = gbuffers[i];
+
+
+        shadowTex = new RenderTexture(shadowMapSize, shadowMapSize, 24, RenderTextureFormat.Depth, RenderTextureReadWrite.Linear);
     }
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
@@ -46,6 +56,9 @@ public class DeferredRenderPipeline : RenderPipeline
         Shader.SetGlobalTexture("_DiffuseIBL", DiffuseIBL);
         Shader.SetGlobalTexture("_SpecularIBL", SpecularIBL);
         Shader.SetGlobalTexture("_BRDFLUT", BRDFLUT);
+        
+        
+        Shader.SetGlobalTexture("_ShadowMap", shadowTex);
 
 
         GBufferPass(context, camera);
@@ -62,6 +75,50 @@ public class DeferredRenderPipeline : RenderPipeline
         }
 
         context.Submit();
+    }
+    
+    
+    void ShadowCastingPass(ScriptableRenderContext context, Camera camera)
+    {
+        Light light = RenderSettings.sun;
+        Vector3 lightDir = light.transform.forward;
+
+        //保存渲染相机设置，配置为阴影相机
+        _shadowMapping.UpdateFrustem(camera, lightDir);
+        _shadowMapping.SaveRenderingCameraSettings(ref camera);
+        _shadowMapping.ConfigShadowCamera(ref camera, lightDir, _orthoDistance);
+        
+        //光源裁剪空间投影矩阵
+        Matrix4x4 V = camera.worldToCameraMatrix;
+        Matrix4x4 P = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false);
+        Shader.SetGlobalMatrix("_WorldToClipLight", P*V);
+
+        CommandBuffer cmd = new CommandBuffer();
+        cmd.name = "ShadowCasting";
+        
+        //更新渲染目标
+        cmd.SetupCameraProperties(camera);
+        cmd.SetRenderTarget(shadowTex);
+        cmd.ClearRenderTarget(true,true,Color.clear);
+        context.ExecuteCommandBuffer(cmd);
+        cmd.Clear();
+
+        //剔除
+        if(!camera.TryGetCullingParameters(out var cullingParameters))  return;
+        cullingParameters.shadowDistance = Mathf.Min(ShadowMapSettings.MaxDistance, camera.farClipPlane);
+        var cullingResults = context.Cull(ref cullingParameters);
+        
+        //渲染
+        ShaderTagId shaderTagId = new ShaderTagId("ShadowCasting");
+        SortingSettings sortingSettings = new SortingSettings(camera);
+        DrawingSettings drawingSettings = new DrawingSettings(shaderTagId, sortingSettings);
+        FilteringSettings filteringSettings = FilteringSettings.defaultValue;
+        context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
+        
+        context.Submit();
+        
+        //恢复渲染相机设置
+        _shadowMapping.RevertRenderingCameraSettings(ref camera);
     }
     void GBufferPass(ScriptableRenderContext context, Camera camera)
     {

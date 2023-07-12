@@ -29,7 +29,7 @@ half GeometrySchlickGGX(half u, half Roughness)
     return nom / denom;
 }
 
-float GeometrySmith(half NoV, half NoL, half Roughness)
+half GeometrySmith(half NoV, half NoL, half Roughness)
 {
     half GGXV = GeometrySchlickGGX(NoV, Roughness);
     half GGXL = GeometrySchlickGGX(NoL, Roughness);
@@ -107,7 +107,7 @@ half3 IBL(
     //渲染方程将菲涅尔项提出后可得两个积分：F0*INT1+INT2
     half3 Specular = IBLs * (f0 * BRDF.x + BRDF.y);
     
-    float3 Indirect = Diffuse + Specular;
+    half3 Indirect = Diffuse + Specular;
     return Indirect;
 }
 
