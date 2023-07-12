@@ -17,5 +17,6 @@ public class ShadowMapDebug : MonoBehaviour
         Light light = RenderSettings.sun;
         Vector3 lightDir = light.transform.forward;
         _shadowMapping.UpdateFrustem(Camera.main, lightDir);
+        _shadowMapping.DebugFrustem();
     }
 }

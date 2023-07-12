@@ -47,7 +47,8 @@
             samplerCUBE _DiffuseIBL;
             samplerCUBE _SpecularIBL;
             sampler2D _BRDFLUT;
-
+            
+            sampler2D _ShadowMap;
 
             half4x4 _vpMatrix;
             half4x4 _vpMatrixInv;

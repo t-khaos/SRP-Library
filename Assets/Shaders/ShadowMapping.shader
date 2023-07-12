@@ -18,10 +18,10 @@ Shader "TRP/ShaderMapping"
             #include "Common.cginc"
 
             //VP矩阵
-            float4x4 _VPMatrix;
-            float4x4 _VPMatrixInv;
+            float4x4 _vpMatrix;
+            float4x4 _vpMatrixInv;
             //平行光正交投影矩阵
-            float4x4 _WorldToClipLight;
+            float4x4 _vpMatrixShadow;
             //GBuffer
             sampler2D _gdepth, _GT1;
             sampler2D _ShadowMap;
@@ -56,10 +56,10 @@ Shader "TRP/ShaderMapping"
                 float linearDepth = Linear01Depth(d);
 
                 float4 ndcPos = float4(uv*2-1, d, 1);
-                float4 worldPos = mul(_VPMatrixInv, ndcPos);
+                float4 worldPos = mul(_vpMatrixInv, ndcPos);
                 worldPos/=worldPos.w;
 
-                float4 ndcShadowPos =  mul(_WorldToClipLight, worldPos);
+                float4 ndcShadowPos =  mul(_vpMatrixShadow, worldPos);
                 ndcShadowPos /= ndcShadowPos.w;
                 float3 ShadowCoord = ndcShadowPos.xyz;
                 ShadowCoord.xy = ShadowCoord.xy *0.5+0.5;

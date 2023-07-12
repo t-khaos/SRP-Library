@@ -60,7 +60,7 @@ half DecodeRGBA2half(half4 rgba) {
 }
 
 half4 Encodehalf2RGBA(half depth) {
-    const half4 bitShift = half4(1.0, 256.0, 256.0 * 256.0, 256.0 * 256.0 * 256.0);
+    const float bitShift = half4(1.0, 256.0, 256.0 * 256.0, 256.0 * 256.0 * 256.0);
     const half4 bitMask = half4(1.0/256.0, 1.0/256.0, 1.0/256.0, 0.0);
     half4 rgbaDepth = frac(depth * bitShift);
     rgbaDepth -= rgbaDepth.gbaa * bitMask;

@@ -23,40 +23,38 @@
     {
         Pass
         {
-            Tags { "LightMode"="ShadowCasting"}
+            Tags { "LightMode"="DepthOnly"}
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
 
             #include "UnityCG.cginc"
             #include "Common.cginc"
-
-            struct appdata{
-                half4 vertex : POSITION;
+            
+            struct v2f
+            {
+                float4 vertex : SV_POSITION;
+                float2 depth : TEXCOORD0;
             };
 
-            struct v2f{
-                half2 clipPos : CLIP_POSITION_ZW;
-            };
-
-            v2f vert(appdata v)
+            v2f vert (appdata_base v)
             {
                 v2f o;
-                half4 clipPos = UnityObjectToClipPos(v.vertex);
-                o.clipPos = clipPos.zw;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.depth = o.vertex.zw;
                 return o;
             }
 
-            half4 frag(v2f i) : SV_TARGET
+            fixed4 frag(v2f i) : SV_Target
             {
                 //从顶点着色器传过来的左边是屏幕空间坐标而不是期望的裁剪空间坐标
-                half depth = i.clipPos.x/i.clipPos.y;
+                half depth = i.depth.x/i.depth.y;
     
                 #if defined (UNITY_REVERSED_Z)
                     depth = 1.0 - depth;//Reverse-Z
                 #endif
-
-                half4 color = Encodehalf2RGBA(depth);
+                fixed4 color = Encodehalf2RGBA(depth);
+                //fixed4 color = float4(depth,depth,depth,1);
                 return color;
             }
 

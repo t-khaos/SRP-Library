@@ -34,7 +34,11 @@ public class Frustum
             //0,1,4,5 - 2,3,6,7
             Debug.DrawLine(bounds[i+(i/2)*2], bounds[i+(i/2)*2+2], color); 
         }
+        
+        
+        Debug.DrawLine((bounds[0]+bounds[3])/2, bounds[0]);
     }
+    
 
     public Vector3[] GetOrientBoundingBox(Vector3 direction)
     {
