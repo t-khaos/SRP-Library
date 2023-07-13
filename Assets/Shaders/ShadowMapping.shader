@@ -15,7 +15,7 @@ Shader "TRP/ShaderMapping"
             #pragma fragment frag
 
             #include "UnityCG.cginc"
-            #include "Common.cginc"
+            #include "Shadow.cginc"
 
             //VP矩阵
             float4x4 _vpMatrix;
@@ -50,21 +50,27 @@ Shader "TRP/ShaderMapping"
             fixed4 frag(v2f i) : SV_Target
             {
                 float2 uv = i.uv; 
-                float3 normal = tex2D(_GT1, uv).rgb * 2 - 1;
-                float d = UNITY_SAMPLE_DEPTH(tex2D(_gdepth, uv));
-                //float d_lin = Linear01Depth(d);
+                float d = tex2D(_gdepth, uv).r;
 
-                // 反投影重建世界坐标
+                //重建片元世界坐标
                 float4 ndcPos = float4(uv*2-1, d, 1);
                 float4 worldPos = mul(_vpMatrixInv, ndcPos);
                 worldPos /= worldPos.w;
 
+                //片元深度沿着法线方向偏移
                 float3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
-                float bias = max(0.001 * (1.0 - dot(normal, lightDir)), 0.001);
-                if(dot(lightDir, normal) < 0.005) return 0;
-                float shadow = 1.0;
+                float3 normal = tex2D(_GT1, uv).rgb * 2 - 1;
+                if(dot(lightDir, normal) < 0.001) return 0;
                 worldPos.xyz += normal * 0.03;
-                shadow *= ShadowMap01(worldPos, _ShadowMap, _vpMatrixShadow);
+
+                //片元坐标投影到光源空间
+                float4 shadowCoord = mul(_vpMatrixShadow, worldPos);
+                shadowCoord /= shadowCoord.w;
+                shadowCoord.xy = shadowCoord.xy * 0.5 + 0.5;
+                        
+                //采样阴影贴图
+                float shadow = 1.0;
+                shadow *= ShadowMap(_ShadowMap, shadowCoord.xyz);
                 return shadow;
             }
             ENDCG
