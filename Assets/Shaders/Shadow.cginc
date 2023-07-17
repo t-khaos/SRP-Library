@@ -1,4 +1,7 @@
-﻿float ShadowMap(sampler2D _ShadowTex, float4x4 _vpMatrixShadow, float4 worldPos)
+﻿
+
+
+float ShadowMap(sampler2D _ShadowTex, float4x4 _vpMatrixShadow, float4 worldPos)
 {
     //片元坐标投影到光源空间
     float4 shadowCoord = mul(_vpMatrixShadow, worldPos);
@@ -18,3 +21,4 @@
 
     return 1.0f;
 }
+

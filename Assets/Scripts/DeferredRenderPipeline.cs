@@ -18,7 +18,6 @@ public class DeferredRenderPipeline : RenderPipeline
     private RenderTexture[] shadowTextures = new RenderTexture[4];
 
     private RenderTexture shadowStrengthTex;
-    private int shadowMapSize = 1024;
 
     private ShadowMapSettings shadowMapSettings = new ShadowMapSettings();
     private ShadowMapping shadowMapping = new ShadowMapping();
@@ -41,7 +40,7 @@ public class DeferredRenderPipeline : RenderPipeline
         shadowStrengthTex = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
         for (var i = 0; i < shadowTextures.Length; i++)
         {
-            shadowTextures[i] = new RenderTexture(shadowMapSize, shadowMapSize, 24, RenderTextureFormat.Depth, RenderTextureReadWrite.Linear);
+            shadowTextures[i] = new RenderTexture((int)shadowMapSettings.Resolution, (int)shadowMapSettings.Resolution, 24, RenderTextureFormat.Depth, RenderTextureReadWrite.Linear);
         }
     }
 
@@ -140,7 +139,7 @@ public class DeferredRenderPipeline : RenderPipeline
         for (var i = 0; i < 4; i++)
         {
             //配置阴影相机
-            csm.subShadowMapping[i].ConfigShadowCamera(ref camera, lightDir);
+            csm.subShadowMapping[i].ConfigShadowCamera(ref camera, lightDir, (int)shadowMapSettings.Resolution);
             //光源裁剪空间投影矩阵
             Matrix4x4 V = camera.worldToCameraMatrix;
             Matrix4x4 P = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false);

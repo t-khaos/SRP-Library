@@ -52,9 +52,9 @@
             {
                 //从顶点着色器传过来的左边是屏幕空间坐标而不是期望的裁剪空间坐标
                 float depth = i.depth.x / i.depth.y;
-                #if defined (UNITY_REVERSED_Z)
+            #if defined (UNITY_REVERSED_Z)
                 depth = 1.0 - depth;
-                #endif
+            #endif
                 fixed4 color = EncodeFloatRGBA(depth);
                 return color;
             }

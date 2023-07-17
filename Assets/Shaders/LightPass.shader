@@ -87,15 +87,16 @@
                     N, V, BaseColor, Roughness, Metallic,
                     _DiffuseIBL, _SpecularIBL, _BRDFLUT
                 );
-
+                
                 half visibility = tex2D(_ShadowStrengthTex, uv).r;
-
+                
                 half3 color = Direct* visibility + Indirect*AO + Emission;
                 //half3 color = Direct + Indirect*AO;
+                
                 //Reinhard 只压缩高亮度
                 //color = color / (color + 1.0);
                 color = ACESFilm(color);
-
+                
                 return half4(color ,1);
             }
             ENDCG

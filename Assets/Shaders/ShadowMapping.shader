@@ -54,7 +54,7 @@ Shader "TRP/ShaderMapping"
                 return o;
             }
 
-            fixed4 frag(v2f i) : SV_Target
+            fixed frag(v2f i) : SV_Target
             {
                 float2 uv = i.uv;
                 float d = UNITY_SAMPLE_DEPTH(tex2D(_gdepth, uv));
@@ -68,9 +68,10 @@ Shader "TRP/ShaderMapping"
                 //片元深度沿着法线方向偏移
                 float3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
                 float3 normal = tex2D(_GT1, uv).rgb * 2 - 1;
-                worldPos.xyz += normal * 0.001;
+                half NoL = dot(normal,lightDir);
+                worldPos.xyz += normal * 0.01;
                 
-                if (dot(lightDir, normal) < 0.001) return 0;
+                if (NoL < 0.001) return 0;
                 
                 float shadow = 1.0;
 
