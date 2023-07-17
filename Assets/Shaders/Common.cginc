@@ -53,17 +53,3 @@ half3 ACESFilm(half3 x)
     half e = 0.14f;
     return saturate((x * (a * x + b)) / (x * (c * x + d) + e));
 }
-
-float DecodeRGBA2hFloat(float4 rgba) {
-    const float4 bitShift = float4(1.0, 1.0/256.0, 1.0/(256.0*256.0), 1.0/(256.0*256.0*256.0));
-    return dot(rgba, bitShift);
-}
-
-float4 EncodeFloat2RGBA(float depth) {
-    const float bitShift = float4(1.0, 256.0, 256.0 * 256.0, 256.0 * 256.0 * 256.0);
-    const float4 bitMask = float4(1.0/256.0, 1.0/256.0, 1.0/256.0, 0.0);
-    float4 rgbaDepth = frac(depth * bitShift);
-    rgbaDepth -= rgbaDepth.gbaa * bitMask;
-    return rgbaDepth;
-}
-

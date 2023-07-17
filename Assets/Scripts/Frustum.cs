@@ -4,41 +4,32 @@ using UnityEngine;
 
 public class Frustum
 {
-    public Vector3[] FarCorners = new Vector3[4];
-    public Vector3[] NearCorners = new Vector3[4];
-        
-    public void DrawFrustum(Color color)
-    {
-        for (int j = 3, i = 0; i < 4; i++, j=i-1)
-        {
-            Debug.DrawLine(NearCorners[i], FarCorners[i], color);
-            Debug.DrawLine(NearCorners[j], NearCorners[i], color);
-            Debug.DrawLine(FarCorners[j], FarCorners[i], color);
-        }
-    }
-
-    public void DrawOBB(Vector3[] bounds, Color color)
-    {
-        //      6--------7
-        //  2--------3   |
-        //  |   |    |   |
-        //  |   4----|---5
-        //  0--------1
-        for (int i = 0; i < 4; i++)
-        {
-            // 绘制底部矩形
-            //0,1,2,3 - 4,5,6,7
-            Debug.DrawLine(bounds[i], bounds[i+4], color);
-            //0,2,4,6 - 1,3,5,7
-            Debug.DrawLine(bounds[i*2], bounds[i*2+1], color);
-            //0,1,4,5 - 2,3,6,7
-            Debug.DrawLine(bounds[i+(i/2)*2], bounds[i+(i/2)*2+2], color); 
-        }
-        
-        
-        Debug.DrawLine((bounds[0]+bounds[3])/2, bounds[0]);
-    }
+    public Vector3[] farCorners = new Vector3[4];
+    public Vector3[] nearCorners = new Vector3[4];
     
+    public void InitByCamera(Camera camera, float near, float far)
+    {
+        //求出相机空间视锥体坐标
+        camera.CalculateFrustumCorners(
+            new Rect(0, 0, 1, 1),
+            near,
+            Camera.MonoOrStereoscopicEye.Mono,
+            nearCorners
+        );
+        camera.CalculateFrustumCorners(
+            new Rect(0, 0, 1, 1),
+            far,
+            Camera.MonoOrStereoscopicEye.Mono,
+            farCorners
+        );
+
+        //变换视锥体到世界空间
+        for (var i = 0; i < 4; i++)
+        {
+            nearCorners[i] = camera.transform.TransformVector(nearCorners[i]) + camera.transform.position;
+            farCorners[i] = camera.transform.TransformVector(farCorners[i]) + camera.transform.position;
+        }
+    }
 
     public Vector3[] GetOrientBoundingBox(Vector3 direction)
     {
@@ -50,8 +41,8 @@ public class Frustum
         var corners = new List<Vector3>(8);
         for (var i = 0; i < 4; i++)
         {
-            corners.Add(WorldToOrient * NearCorners[i]);
-            corners.Add(WorldToOrient * FarCorners[i]);
+            corners.Add(WorldToOrient * nearCorners[i]);
+            corners.Add(WorldToOrient * farCorners[i]);
         }
         var size = new Vector3[2];
         size[0] = size[1] = corners[0];
@@ -80,3 +71,4 @@ public class Frustum
         return bounds;
     }
 }
+

@@ -18,8 +18,6 @@ public class DeferredRenderPipelineAsset : RenderPipelineAsset
         RP.DiffuseIBL = DiffuseIBL;
         RP.SpecularIBL = SpecularIBL;   
         RP.BRDFLUT = BRDFLUT;
-        RP.ShadowMapSettings = ShadowMapSettings;
-        
         return RP;
     }
 

@@ -23,21 +23,24 @@
     {
         Pass
         {
-            Tags { "LightMode"="DepthOnly"}
+            Tags
+            {
+                "LightMode"="DepthOnly"
+            }
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
 
             #include "UnityCG.cginc"
             #include "Common.cginc"
-            
+
             struct v2f
             {
                 half4 vertex : SV_POSITION;
                 float2 depth : TEXCOORD0;
             };
 
-            v2f vert (appdata_base v)
+            v2f vert(appdata_base v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
@@ -48,20 +51,22 @@
             fixed4 frag(v2f i) : SV_Target
             {
                 //从顶点着色器传过来的左边是屏幕空间坐标而不是期望的裁剪空间坐标
-                float depth = i.depth.x/i.depth.y;
-                
-                //fixed4 color = EncodeFloat2RGBA(depth);
-                fixed4 color = float4(depth,depth,depth,1);
+                float depth = i.depth.x / i.depth.y;
+                #if defined (UNITY_REVERSED_Z)
+                depth = 1.0 - depth;
+                #endif
+                fixed4 color = EncodeFloatRGBA(depth);
                 return color;
             }
-
-
             ENDCG
         }
-        
+
         Pass
         {
-            Tags { "LightMode"="GBuffer" }
+            Tags
+            {
+                "LightMode"="GBuffer"
+            }
 
             CGPROGRAM
             #pragma vertex vert
@@ -86,7 +91,8 @@
                 half3 normal : NORMAL;
             };
 
-            struct GBufferOutput{
+            struct GBufferOutput
+            {
                 half4 GT0 : SV_TARGET0;
                 half4 GT1 : SV_TARGET1;
                 half4 GT2 : SV_TARGET2;
@@ -104,13 +110,13 @@
             half _Metallic, _Roughness;
             half3 _BaseColor, _Emission;
 
-            v2f vert (appdata v)
+            v2f vert(appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = v.uv;
                 o.normal = UnityObjectToWorldNormal(v.normal);
-                o.tangent = UnityObjectToWorldDir(v.tangent)*v.tangent.w;
+                o.tangent = UnityObjectToWorldDir(v.tangent) * v.tangent.w;
                 return o;
             }
 
@@ -122,10 +128,11 @@
                 //构建TBN矩阵
                 half3 T = normalize(i.tangent);
                 half3 N = i.normal;
-                half3 B = normalize(cross(N,T));
+                half3 B = normalize(cross(N, T));
 
                 //若使用法线贴图则解包法线贴图
-                if (_UseNormalTex) {
+                if (_UseNormalTex)
+                {
                     half3 Normal = UnpackNormal(tex2D(_NormalTex, uv));
                     half3x3 TBN = half3x3(T, B, N);
                     N = normalize(mul(Normal, TBN));
@@ -147,11 +154,10 @@
                 //编码GBuffer
                 o.GT0 = half4(BaseColor, Metallic);
                 o.GT1 = UnitVectorToColor(N);
-                o.GT2 = half4(Emission,Roughness);
-                o.GT3 = half4(AO,0,0,1);
+                o.GT2 = half4(Emission, Roughness);
+                o.GT3 = half4(AO, 0, 0, 1);
                 return o;
             }
-
             ENDCG
         }
     }
