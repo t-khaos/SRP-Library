@@ -13,6 +13,9 @@ public class DeferredRenderPipeline : RenderPipeline
     public Cubemap SpecularIBL;
     public Texture BRDFLUT;
 
+    private Frustum CameraFrustum;
+    
+    private RenderTexture HiZBuffer;
     //阴影相关
     //private RenderTexture shadowTex;
     private RenderTexture[] shadowTextures = new RenderTexture[4];
@@ -84,10 +87,14 @@ public class DeferredRenderPipeline : RenderPipeline
         //Shader.SetGlobalTexture("_ShadowMap", shadowTex);
         Shader.SetGlobalTexture("_ShadowStrengthTex", shadowStrengthTex);
 
+        SetFrustum(camera);
+
         ShadowCastingPass(context, camera);
+        
+        InstanceDrawPass(context, camera);
 
         GBufferPass(context, camera);
-
+        
         ShadowMappingPass(context, camera);
 
         LightPass(context, camera);
@@ -102,6 +109,12 @@ public class DeferredRenderPipeline : RenderPipeline
         }
 
         context.Submit();
+    }
+
+    void SetFrustum(Camera camera)
+    {
+        CameraFrustum = new Frustum();
+        CameraFrustum.InitByCamera(camera, camera.nearClipPlane,camera.farClipPlane);
     }
 
 
@@ -172,7 +185,19 @@ public class DeferredRenderPipeline : RenderPipeline
         settings.Revert(ref camera);
         context.SetupCameraProperties(camera);
     }
+    
 
+    void InstanceDrawPass(ScriptableRenderContext context, Camera camera)
+    {
+        var cmd = new CommandBuffer();
+        cmd.name = "Instance GBuffer";
+        cmd.SetRenderTarget(gbufferID, gdepth);
+
+        
+        context.ExecuteCommandBuffer(cmd);
+        context.Submit();
+    }
+    
     void GBufferPass(ScriptableRenderContext context, Camera camera)
     {
         context.SetupCameraProperties(camera);
@@ -188,15 +213,22 @@ public class DeferredRenderPipeline : RenderPipeline
         //剔除
         camera.TryGetCullingParameters(out var cullingParameters);
         var cullingResults = context.Cull(ref cullingParameters);
-
-        //渲染设置
-        ShaderTagId shaderTagId = new ShaderTagId("GBuffer");
+        
         SortingSettings sortingSettings = new SortingSettings(camera);
-        DrawingSettings drawingSettings = new DrawingSettings(shaderTagId, sortingSettings);
         FilteringSettings filteringSettings = FilteringSettings.defaultValue;
-
-        //绘制物体
-        context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
+        //渲染设置
+        {
+            ShaderTagId shaderTagId = new ShaderTagId("GBuffer");
+            DrawingSettings drawingSettings = new DrawingSettings(shaderTagId, sortingSettings);
+            //绘制物体
+            context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
+        }
+        {
+            ShaderTagId shaderTagId = new ShaderTagId("GBufferInstance");
+            DrawingSettings drawingSettings = new DrawingSettings(shaderTagId, sortingSettings);
+            //绘制物体
+            context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
+        }
 
         context.Submit();
     }

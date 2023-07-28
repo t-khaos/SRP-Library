@@ -15,3 +15,9 @@ MonoBehaviour:
   DiffuseIBL: {fileID: 8900000, guid: b830c2fc39a04cb4f8a842378e5893cf, type: 3}
   SpecularIBL: {fileID: 8900000, guid: 39a2c68ff5296434594b2bc63822abff, type: 3}
   BRDFLUT: {fileID: 2800000, guid: c7ba463b44357b94cad00be98a5120f5, type: 3}
+  CullingShader: {fileID: 7200000, guid: cb9b1984db014d4d99c3711b99acf551, type: 3}
+  Instances:
+  - {fileID: 11400000, guid: ea479e4ba3595dd4287ff8385d5dbc60, type: 2}
+  ShadowMapSettings:
+    MaxDistance: 100
+    Resolution: 1024

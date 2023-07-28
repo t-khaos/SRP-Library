@@ -24,7 +24,7 @@ TSR is a custom render pipeline based on Unity SRP, which is utilized for person
 
 ![PBR-IBL](./Gallery/PBR-IBL.png)
 
-### RealTime Shadow
+### Real-Time Shadow
 - Shadow Map
 
   ![ShadowMap](./Gallery/ShadowMap.png)
@@ -32,6 +32,14 @@ TSR is a custom render pipeline based on Unity SRP, which is utilized for person
 - Cascaded Shadow Map
 
   ![CSM](Gallery/CSM.png)
+
+### Culling
+
+- Frustum Culling by Compute Shader
+
+  ![FrustumCulling](Gallery/FrustumCulling.png)
+
+
 
 ## Reference
 

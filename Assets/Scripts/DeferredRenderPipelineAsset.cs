@@ -9,7 +9,7 @@ public class DeferredRenderPipelineAsset : RenderPipelineAsset
     public Cubemap DiffuseIBL;
     public Cubemap SpecularIBL;
     public Texture BRDFLUT;
-
+    
     [SerializeField] public ShadowMapSettings ShadowMapSettings = default;
     protected override RenderPipeline CreatePipeline()
     {

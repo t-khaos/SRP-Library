@@ -70,5 +70,40 @@ public class Frustum
 
         return bounds;
     }
+
+    public Plane GetPlane(Vector3 normal, Vector3 point)
+    {
+        return new Plane(normal, -Vector3.Dot(normal, point));
+    }
+
+    private Plane GetPlane(Vector3 a, Vector3 b, Vector3 c)
+    {
+        var normal = Vector3.Normalize(Vector3.Cross(b - a, c - a));
+        return GetPlane(normal, a);
+    }
+    public Plane[] GetFrustumPlane()
+    {
+        var planes = new Plane[6];
+
+        // Near plane
+        planes[0] = GetPlane(nearCorners[0], nearCorners[1], nearCorners[2]);
+
+        // Far plane
+        planes[1] = GetPlane(farCorners[0], farCorners[2], farCorners[1]);
+
+        // Left plane
+        planes[2] = GetPlane(nearCorners[0], nearCorners[2], farCorners[0]);
+
+        // Right plane
+        planes[3] = GetPlane(nearCorners[1], farCorners[1], nearCorners[3]);
+
+        // Top plane
+        planes[4] = GetPlane(nearCorners[2], nearCorners[3], farCorners[2]);
+
+        // Bottom plane
+        planes[5] = GetPlane(nearCorners[0], farCorners[0], nearCorners[1]);
+
+        return planes;
+    }
 }
 
