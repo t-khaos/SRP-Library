@@ -17,27 +17,21 @@ float4x4 _vpMatrix;
 
 Texture2D _hizTex;
 
+int IsPointOusidePlane(float4 plane, float3 p)  {
+    return dot(plane.xyz, p) + plane.w > 0 ? 1 : 0;  
+}  
 
-
-int GetSide(float4 plane, float3 p)
-{
-    return (dot(plane.xyz, p)+plane.w > 0) ? 1 : 0;
-}
-
-int IsInside(float4 _planes[6], float3 p)
-{
-    int cnt = 0;
-    for(int i=0; i<6; i++)
-        cnt += GetSide(_planes[i], p);
-    return cnt==6 ? 1 : 0;
-}
-
-bool Visibility(float4 _planes[6], float4 _bounds[8])
-{
-    int cnt = 0;
-    for(int i=0; i<8; i++)
-        cnt += IsInside(_planes, _bounds[i]);
-    return cnt > 0;
+int IsPointOusideFrustum(float4 planes[6], float3 p)  {  
+    int count = 0;  
+    for (int i = 0; i < 6; i++)  
+        count += IsPointOusidePlane(planes[i], p);  
+    return count == 6 ? 1 : 0;  
+}  
+bool IsBoundsInsideFrustum(float4 planes[6], float4 bounds[8])  {  
+    int count = 0;  
+    for (int i = 0; i < 6; i++)  
+        count += IsPointOusideFrustum(planes, bounds[i]);  
+    return count > 0;  
 }
 
 [numthreads(128,1,1)]//核函数对应线程组里线程的数量
@@ -47,19 +41,16 @@ void CSMain(uint3 gid:SV_GroupID, uint3 tid : SV_GroupThreadID)
     if (index >= (uint)_instanceCount) return;
     
     float4x4 ObjectToWorld = _matrixBuffer[index];
-    
     //包围盒世界坐标
     float4 worldBounds[8];
     for(int i=0; i<8; i++)
     {
         worldBounds[i] = mul(ObjectToWorld, _bounds[i]);
     }
-
     //视锥剔除
-    bool vis = Visibility(_planes, worldBounds);
+    bool vis = IsBoundsInsideFrustum(_planes, worldBounds);
     if(!vis) return;
 
     //保存剔除后的变换矩阵
     _validMatrixBuffer.Append(ObjectToWorld);
-    InterlockedAdd(_argsBuffer[1], 1);
 }

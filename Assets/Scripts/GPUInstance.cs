@@ -30,6 +30,8 @@ public class GPUInstance : MonoBehaviour
 
     private Matrix4x4[] localToWorldMatrices;
 
+    public bool EnableDebug = false;
+
     void Start()
     {
         argsBuffer = new ComputeBuffer(1, args.Length * sizeof(uint), ComputeBufferType.IndirectArguments);
@@ -42,25 +44,24 @@ public class GPUInstance : MonoBehaviour
     {
         subMeshIdx = Math.Clamp(subMeshIdx, 0, InstanceMesh.subMeshCount - 1);
 
-        //需要更新buffer
-        if (cachedInstanceCount != InstanceCount || cachedSubMeshIdx != subMeshIdx)
-        {
-            UpdateMatrices();
-            UpdateArgs();
-            UpdateCaches();
-        }
+        UpdateMatrices();
+        UpdateArgs();
+        UpdateCaches();
 
         //视锥剔除
         if (EnableFrustumCulling)
         {
             Culling();
+            //更新实例数量为剔除后的数量
             ComputeBuffer.CopyCount(cullingInfo.CullingResult, argsBuffer, sizeof(uint));
         }
+        //不剔除则直接传给顶点着色器
         else
         {
             instanceMatrial.SetBuffer("_ObjectToWorldMatrices", matrixBuffer);
         }
 
+        //绘制Instance
         Graphics.DrawMeshInstancedIndirect(
             InstanceMesh, subMeshIdx, instanceMatrial,
             new Bounds(Vector3.zero, new Vector3(200.0f, 200.0f, 200.0f)),
@@ -71,6 +72,7 @@ public class GPUInstance : MonoBehaviour
 
     void UpdateMatrices()
     {
+        if (cachedInstanceCount == InstanceCount) return;
         //初始化矩阵缓冲
         matrixBuffer?.Release();
         matrixBuffer = new ComputeBuffer(InstanceCount, sizeof(float) * 16);
@@ -90,6 +92,7 @@ public class GPUInstance : MonoBehaviour
 
     void UpdateArgs()
     {
+        if (cachedSubMeshIdx == subMeshIdx) return;
         //设置args buffer
         if (InstanceMesh)
         {
@@ -130,11 +133,12 @@ public class GPUInstance : MonoBehaviour
         //更新视锥平面，传入cs
         cullingInfo.CullingFrustum.InitByCamera(camera, camera.nearClipPlane, camera.farClipPlane);
         var planes = GeometryUtility.CalculateFrustumPlanes(camera);
-        Vector4[] planeVector4s = new Vector4[6];
+        var planeVector4s = new Vector4[6];
         for (int i = 0; i < planes.Length; i++)
         {
             planeVector4s[i] = new Vector4(planes[i].normal.x, planes[i].normal.y, planes[i].normal.z, planes[i].distance);
         }
+
         cs.SetVectorArray("_planes", planeVector4s);
 
         //计算mesh的包围盒，传入cs
@@ -142,6 +146,7 @@ public class GPUInstance : MonoBehaviour
         cs.SetVectorArray("_bounds", bounds);
 
         //debug
+        if (EnableDebug)
         {
             //视锥
 
