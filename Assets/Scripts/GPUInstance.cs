@@ -132,6 +132,7 @@ public class GPUInstance : MonoBehaviour
 
         //更新视锥平面，传入cs
         cullingInfo.CullingFrustum.InitByCamera(camera, camera.nearClipPlane, camera.farClipPlane);
+        
         var planes = GeometryUtility.CalculateFrustumPlanes(camera);
         var planeVector4s = new Vector4[6];
         for (int i = 0; i < planes.Length; i++)
@@ -139,6 +140,7 @@ public class GPUInstance : MonoBehaviour
             planeVector4s[i] = new Vector4(planes[i].normal.x, planes[i].normal.y, planes[i].normal.z, planes[i].distance);
         }
 
+        var ps = cullingInfo.CullingFrustum.GetFrustumPlane();
         cs.SetVectorArray("_planes", planeVector4s);
 
         //计算mesh的包围盒，传入cs
